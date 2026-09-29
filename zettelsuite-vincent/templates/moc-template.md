@@ -7,7 +7,7 @@ created: {{today}}
 parent:
 ---
 **Checklist**
-- [ ] Create a Map of Contents note if you have enough related ideas to make one (5 is a good threshold).
+- [ ] Once there are at least 5 related notes, create a MOC for them.
 - [ ] Update the intro text
 - [ ] Find related notes and add them to the list
 	- [ ] Give a small description when the title is not enough

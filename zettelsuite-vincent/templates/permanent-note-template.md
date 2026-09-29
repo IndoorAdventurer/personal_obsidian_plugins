@@ -9,14 +9,15 @@ created: {{today}}
 - [ ] TLDR
 	- [ ] Atomic and self-contained (one idea per note and still makes sense in a year)
 - [ ] Making it easy to find with search
-	- [ ] Title contains all appropriate keywords
+	- [ ] Written in English
+	- [ ] Title is a claim and contains all appropriate keywords
 	- [ ] Added appropriate tags
 	- [ ] How might you later search for this note? Make sure the words you would search for are in the text!
 - [ ] Linking
 	- [ ] Add appropriate references if needed. Else delete that section
 	- [ ] Link to at least 1 related note, but ideally more.
 	- [ ] Link those notes to this one if appropriate
-	- [ ] Add it to an existing MOC if appropriate
+	- [ ] Make sure it is reachable from the Main MOC (add it to an existing MOC, or Miscellaneous MOC if nothing fits)
 - [ ] Remove this checklist
 # {{file_name}}
 

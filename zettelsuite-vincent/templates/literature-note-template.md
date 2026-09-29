@@ -12,6 +12,11 @@ published: {{pubdate}}
 reading-status:
 rating (0-10):
 ---
+**Checklist**
+- [ ] Title is of the form Author's last name, Title, Year
+- [ ] Added appropriate tags
+- [ ] Put main ideas in separate permanent notes and link them here
+- [ ] Remove this checklist
 # {{file_name}}
 > [!tldr] Abstract
 > Abstract here

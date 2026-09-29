@@ -1,5 +1,5 @@
 ---
-note-type: literature-note
+note-type: fleeting-note
 tags:
   - fleeting-note
   - zettelkasten{{tags}}
