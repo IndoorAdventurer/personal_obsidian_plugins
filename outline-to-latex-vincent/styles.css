@@ -1,0 +1,74 @@
+/* References, in the editor and in reading view. */
+.otl-ref {
+	--otl-color: var(--text-accent);
+	color: var(--otl-color);
+	background-color: color-mix(in srgb, var(--otl-color) 12%, transparent);
+	border-radius: var(--radius-s);
+	padding: 0 2px;
+}
+.otl-ref .cm-underline,
+.otl-ref.internal-link,
+.otl-ref .cm-hmd-internal-link {
+	color: var(--otl-color);
+	text-decoration: none;
+}
+.otl-ref-equation { --otl-color: var(--color-blue); }
+.otl-ref-figure { --otl-color: var(--color-green); }
+.otl-ref-table { --otl-color: var(--color-cyan); }
+.otl-ref-section { --otl-color: var(--color-purple); }
+.otl-ref-citation { --otl-color: var(--color-orange); }
+.otl-ref-block { --otl-color: var(--text-muted); }
+.otl-ref-pending { --otl-color: var(--text-faint); font-style: italic; }
+.otl-ref-broken {
+	--otl-color: var(--text-error);
+	text-decoration: underline wavy var(--text-error);
+}
+
+/* The @ autocomplete. */
+.otl-suggestion-line {
+	display: flex;
+	align-items: baseline;
+	gap: var(--size-4-2);
+}
+.otl-suggestion-kind {
+	font-size: var(--font-ui-smaller);
+}
+.otl-suggestion-detail {
+	margin-left: auto;
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}
+.otl-suggestion-preview {
+	max-height: 120px;
+	overflow: hidden;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+.otl-suggestion-preview img {
+	max-height: 100px;
+}
+
+/* The export result. */
+.otl-result ul {
+	padding-left: var(--size-4-4);
+	user-select: text;
+}
+.otl-result-error li {
+	color: var(--text-error);
+}
+.otl-result-note {
+	margin-left: var(--size-4-2);
+	font-size: var(--font-ui-smaller);
+}
+.otl-result-changes {
+	max-height: 200px;
+	overflow-y: auto;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+}
+.otl-result-buttons {
+	display: flex;
+	gap: var(--size-4-2);
+	justify-content: flex-end;
+	margin-top: var(--size-4-4);
+}

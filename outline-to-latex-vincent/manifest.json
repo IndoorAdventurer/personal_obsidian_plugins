@@ -1,0 +1,9 @@
+{
+	"id": "outline-to-latex-vincent",
+	"name": "Outline to LaTeX",
+	"version": "0.1.0",
+	"minAppVersion": "1.5.0",
+	"description": "Write a LaTeX report in your notes: an outline note defines the structure, and the LaTeX and PDF are compiled from it.",
+	"author": "Vincent Tonkes",
+	"isDesktopOnly": true
+}

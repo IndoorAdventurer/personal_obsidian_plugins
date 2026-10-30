@@ -1,0 +1,22 @@
+{
+	"name": "outline-to-latex-vincent",
+	"version": "0.1.0",
+	"description": "Write a LaTeX report in your notes: an outline note defines the structure, and the LaTeX and PDF are compiled from it.",
+	"main": "main.js",
+	"bin": { "outline-to-latex": "src/cli.js" },
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "node esbuild.config.mjs production",
+		"test": "node --test test/*.test.js"
+	},
+	"keywords": [],
+	"author": "Vincent Tonkes",
+	"license": "MIT",
+	"dependencies": {
+		"yaml": "^2.5.0"
+	},
+	"devDependencies": {
+		"builtin-modules": "3.3.0",
+		"esbuild": "^0.24.0"
+	}
+}
