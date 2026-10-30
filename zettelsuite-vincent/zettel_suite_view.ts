@@ -60,7 +60,8 @@ export default class ZettelSuiteView extends ItemView {
 		container.createEl("h4", {text: "New note"});
 
 		const file_name = this.addField(container, "File name", text =>
-			text.setPlaceholder("e.g. Awesomeness MOC"));
+			text.setPlaceholder("e.g. Awesomeness MOC"),
+			"Enter creates a fleeting note.");
 
 		const create = (note_type: NoteDef["note_type"]) => this.validate_and_clear(
 			[file_name], [file_name],
@@ -74,11 +75,11 @@ export default class ZettelSuiteView extends ItemView {
 		});
 
 		const buttons = container.createDiv({cls: "zettelsuite-buttons"});
-		new ButtonComponent(buttons).setButtonText("Fleeting").setCta()
+		new ButtonComponent(buttons).setButtonText("+ Fleeting")
 			.onClick(() => create("fleeting"));
-		new ButtonComponent(buttons).setButtonText("Permanent")
+		new ButtonComponent(buttons).setButtonText("+ Permanent")
 			.onClick(() => create("permanent"));
-		new ButtonComponent(buttons).setButtonText("MOC")
+		new ButtonComponent(buttons).setButtonText("+ MOC")
 			.onClick(() => create("moc"));
 	}
 
@@ -149,8 +150,7 @@ export default class ZettelSuiteView extends ItemView {
 
 		const required = [ref_title, ref_authors, ref_pubdate];
 		new ButtonComponent(container.createDiv({cls: "zettelsuite-buttons"}))
-			.setButtonText("Create literature note")
-			.setCta()
+			.setButtonText("+ Literature note")
 			.onClick(async () => {
 				// What's missing is in there, so it should be visible:
 				if (required.some(field => field.getValue().length === 0))
