@@ -1,9 +1,9 @@
-import { Editor, EditorPosition, MarkdownView, Menu, MenuItem, Plugin, TFile, Workspace, WorkspaceLeaf, normalizePath } from 'obsidian';
+import { Editor, MarkdownView, Menu, Plugin, TFile, WorkspaceLeaf, normalizePath } from 'obsidian';
 import ZettelSuiteView, {NoteDef} from 'zettel_suite_view';
 import { ZettelSuiteSettings, ZETTELSUITE_DEFAULT_SETTINGS } from 'zettel_suite_settings';
 import ZettelSuiteSettingsTab from 'zettel_suite_settings_tab';
 import NoteNameModal from 'zettel_suite_name_modal';
-// import * as path from 'path';
+import { authorListItem, fillTemplate, noteOfWikiLink, safeFileName } from 'zettel_suite_text';
 
 /**
  * This plugin is for quickly creating boilerplate notes for my Zettelkasten
@@ -128,9 +128,22 @@ export default class ZettelSuitePlugin extends Plugin {
 		});
 		ann_template = this.templateInserts(ann_template, {...nd, file_name: ann_name});
 
-		if (nd.annotation_target) // Doing first so literature note gets opened last/on top
-			await this.createFileAndOpen(ann_name, this.settings.annotations_folders, ann_template);
-		await this.createFileAndOpen(lit_name, this.settings.literature_folder, lit_template);
+		const ann_file = nd.annotation_target ?
+			await this.createFile(ann_name, this.settings.annotations_folders, ann_template) : null;
+
+		let lit_file: TFile;
+		try {
+			lit_file = await this.createFile(lit_name, this.settings.literature_folder, lit_template);
+		} catch (error) {
+			// Not leaving an annotations file behind without its literature note:
+			if (ann_file)
+				await this.app.vault.delete(ann_file);
+			throw error;
+		}
+
+		if (ann_file) // Doing first so literature note gets opened last/on top
+			await this.openInNewTab(ann_file);
+		await this.openInNewTab(lit_file);
 	}
 
 	/**
@@ -178,19 +191,19 @@ export default class ZettelSuitePlugin extends Plugin {
 				.getFirstLinkpathDest(wikiLink, info.file?.path || ""))
 			return;
 
-			// Creating menu items to create with template:
-			for (const [type, name] of [
-				["moc", "MOC"],
-				["fleeting", "Fleeting Note"],
-				["permanent", "Permanent Note"]
-			]) {
-				menu.addItem(item => item
-					.setTitle(`Create as ${name}`)
-					.onClick(async ev => this.createSimpleNote({
-						note_type: type as any, file_name: wikiLink
-					}))
-				);
-			}
+		// Creating menu items to create with template:
+		for (const [type, name] of [
+			["moc", "MOC"],
+			["fleeting", "Fleeting Note"],
+			["permanent", "Permanent Note"]
+		]) {
+			menu.addItem(item => item
+				.setTitle(`Create as ${name}`)
+				.onClick(async ev => this.createSimpleNote({
+					note_type: type as any, file_name: wikiLink
+				}))
+			);
+		}
 	}
 
 	/**
@@ -235,8 +248,8 @@ export default class ZettelSuitePlugin extends Plugin {
 		if (nd.authors && nd.authors[0])
 			name = nd.authors[0].split(",")[0].trim();
 		if (type === "literature")
-			return `${name}, ${nd.pubdate}, ${nd.title}`;
-		return `${name.toLocaleLowerCase()}_${nd.pubdate} ${nd.title}`;
+			return safeFileName(`${name}, ${nd.pubdate}, ${nd.title}`);
+		return safeFileName(`${name.toLocaleLowerCase()}_${nd.pubdate} ${nd.title}`);
 	}
 
 	/**
@@ -251,31 +264,23 @@ export default class ZettelSuitePlugin extends Plugin {
 			.join("");
 		const annotations_file =
 			nd.annotations_file ? `"[[${nd.annotations_file}]]"`: "none";
+		const authors = nd.authors?.map(authorListItem).join("");
 
-		const convertAuthor = (author: string) => {
-			const parts = author.split(",")
-				.map(part => part.trim()).filter(part => part.length > 0);
-			if (parts.length !== 2)
-				return author.trim();
-			const [ lastName, Firstnames ] = parts;
-			return `\n  - ${Firstnames} ${lastName}`
-		}
-		const authors = nd.authors?.map(convertAuthor).join("");
-		
-		return template
+		return fillTemplate(template, {
 			// General:
-			.replace(/{{file_name}}/g, orEmptyStr(nd.file_name))
-			.replace(/{{today}}/g, this.getDateTime())
-			.replace(/{{tags}}/g, tag_list)
+			file_name: orEmptyStr(nd.file_name),
+			today: this.getDateTime(),
+			tags: tag_list,
 
 			// Literature notes specific:
-			.replace(/{{lit_type}}/g, orEmptyStr(nd.lit_type))
-			.replace(/{{annotations_file}}/g, annotations_file)
-			.replace(/{{title}}/g, orEmptyStr(nd.title))
-			.replace(/{{authors}}/g, orEmptyStr(authors))
-			.replace(/{{pubdate}}/g, orEmptyStr(nd.pubdate))
-			.replace(/{{bibtex}}/g, orEmptyStr(nd.bibtex))
-			.replace(/{{annotation_target}}/g, orEmptyStr(nd.annotation_target))
+			lit_type: orEmptyStr(nd.lit_type),
+			annotations_file,
+			title: orEmptyStr(nd.title),
+			authors: orEmptyStr(authors),
+			pubdate: orEmptyStr(nd.pubdate),
+			bibtex: orEmptyStr(nd.bibtex),
+			annotation_target: orEmptyStr(nd.annotation_target)
+		}, ["title"]);
 	}
 
 	/**
@@ -298,11 +303,21 @@ export default class ZettelSuitePlugin extends Plugin {
 	 * @param contents File contents
 	 */
 	private async createFileAndOpen(name: string, directory: string, contents: string) {
+		await this.openInNewTab(await this.createFile(name, directory, contents));
+	}
+
+	/**
+	 * @param name File name (.md will be appended to it)
+	 * @param directory Directory to put file in
+	 * @param contents File contents
+	 */
+	private async createFile(name: string, directory: string, contents: string) {
 		const full_path = normalizePath(`${directory}/${name}.md`);
-		await this.app.vault.create(full_path, contents);
-		const to_open = await this.app.vault.getAbstractFileByPath(full_path);
-		if (to_open && to_open instanceof TFile)
-			await this.app.workspace.getLeaf("tab").openFile(to_open);
+		return await this.app.vault.create(full_path, contents);
+	}
+
+	private async openInNewTab(file: TFile) {
+		await this.app.workspace.getLeaf("tab").openFile(file);
 	}
 
 	/**
@@ -324,8 +339,8 @@ export default class ZettelSuitePlugin extends Plugin {
 		if (!match)
 			return "";
 
-		// Taking of the potential alias part and returning it:
-		return match[1].split("|")[0].trim();
+		// Taking of the potential alias, heading or block part and returning it:
+		return noteOfWikiLink(match[1]);
 	}
 
 	async loadSettings() {
@@ -333,6 +348,6 @@ export default class ZettelSuitePlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		this.saveData(this.settings)
+		await this.saveData(this.settings);
 	}
 }
