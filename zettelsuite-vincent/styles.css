@@ -1,0 +1,60 @@
+/* The side panel. Sizes and colours come from the theme. */
+.zettelsuite-panel h4 {
+	margin: var(--size-4-4) 0 var(--size-4-2);
+	font-size: var(--font-ui-medium);
+}
+.zettelsuite-panel h4:first-child {
+	margin-top: 0;
+}
+
+.zettelsuite-field {
+	margin-bottom: var(--size-4-3);
+}
+.zettelsuite-field label {
+	display: block;
+	margin-bottom: var(--size-2-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+.zettelsuite-field input,
+.zettelsuite-field textarea {
+	box-sizing: border-box;
+	width: 100%;
+}
+.zettelsuite-field textarea {
+	resize: vertical;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+}
+
+.zettelsuite-hint {
+	margin-top: var(--size-2-2);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	overflow-wrap: anywhere;
+}
+.zettelsuite-hint.mod-warning {
+	color: var(--text-warning);
+}
+
+.zettelsuite-details {
+	margin-bottom: var(--size-4-3);
+}
+.zettelsuite-details summary {
+	margin-bottom: var(--size-4-2);
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+}
+
+/* Buttons share a row, and wrap only if the panel gets really narrow. */
+.zettelsuite-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-3);
+	margin-bottom: var(--size-4-4);
+}
+.zettelsuite-buttons button {
+	flex: 1 1 0;
+	min-width: fit-content;
+}

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert";
-import { authorListItem, fillTemplate, noteOfWikiLink, safeFileName, yamlValue } from "./zettel_suite_text.ts";
+import { authorFromBibtex, authorListItem, citationFromBibtex, citationFrontmatter, fillTemplate, noteOfWikiLink, safeFileName, yamlValue } from "./zettel_suite_text.ts";
 
 test("safeFileName removes what Obsidian or links can't handle", () => {
 	assert.strictEqual(safeFileName("CuriousRL: Curiosity-Driven RL"), "CuriousRL Curiosity-Driven RL");
@@ -49,4 +49,38 @@ test("fillTemplate leaves what's in the values alone", () => {
 test("fillTemplate keeps a placeholder glued to other text", () => {
 	const filled = fillTemplate("  - zettelkasten{{tags}}\ncreated: {{today}}", { tags: "\n  - a", today: "now" }, []);
 	assert.strictEqual(filled, "  - zettelkasten\n  - a\ncreated: now");
+});
+
+test("authorFromBibtex handles every shape the parser gives", () => {
+	assert.strictEqual(authorFromBibtex({ lastName: "Lorem", firstName: "Anna" }), "Lorem, Anna");
+	assert.strictEqual(authorFromBibtex({ name: "OpenAI Team" }), "OpenAI Team");
+	assert.strictEqual(authorFromBibtex({ lastName: "Plato" }), "Plato");
+	assert.strictEqual(authorListItem(authorFromBibtex({ name: "OpenAI Team" })), "\n  - OpenAI Team");
+});
+
+test("citationFromBibtex finds the venue for every kind of entry", () => {
+	const venue = (type: string, fields: {[field: string]: any}) => citationFromBibtex({ key: "k", type, fields }).venue;
+	assert.strictEqual(venue("article", { journal: "JMLR" }), "JMLR");
+	assert.strictEqual(venue("article", { journaltitle: "JMLR" }), "JMLR");
+	assert.strictEqual(venue("inproceedings", { booktitle: "IJCAI" }), "IJCAI");
+	assert.strictEqual(venue("misc", { howpublished: "arXiv preprint" }), "arXiv preprint");
+	assert.strictEqual(venue("book", {}), undefined);
+});
+
+test("citationFromBibtex only keeps what's there and evens out the parser's output", () => {
+	const citation = citationFromBibtex({
+		key: "a24", type: "conference",
+		fields: { booktitle: "Conf", publisher: ["MIT & Co"], volume: "12", title: "not a citation field" }
+	});
+	assert.deepStrictEqual(citation, { citekey: "a24", bibtype: "inproceedings", venue: "Conf", volume: "12", publisher: "MIT & Co" });
+});
+
+test("citationFrontmatter writes valid lines, and nothing without a citation", () => {
+	assert.strictEqual(citationFrontmatter({ citekey: "a24", venue: "Proc: IJCAI", volume: "12" }), '\ncitekey: a24\nvenue: "Proc: IJCAI"\nvolume: "12"');
+	assert.strictEqual(citationFrontmatter(undefined), "");
+});
+
+test("the citation lines end up right after the property they're glued to", () => {
+	const filled = fillTemplate("published: {{pubdate}}{{citation_fields}}\nrating:", { pubdate: "2020", citation_fields: "\ncitekey: a" }, ["title"]);
+	assert.strictEqual(filled, "published: 2020\ncitekey: a\nrating:");
 });

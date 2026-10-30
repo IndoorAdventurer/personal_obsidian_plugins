@@ -3,7 +3,7 @@ import ZettelSuiteView, {NoteDef} from 'zettel_suite_view';
 import { ZettelSuiteSettings, ZETTELSUITE_DEFAULT_SETTINGS } from 'zettel_suite_settings';
 import ZettelSuiteSettingsTab from 'zettel_suite_settings_tab';
 import NoteNameModal from 'zettel_suite_name_modal';
-import { authorListItem, fillTemplate, noteOfWikiLink, safeFileName } from 'zettel_suite_text';
+import { authorListItem, citationFrontmatter, fillTemplate, noteOfWikiLink, safeFileName } from 'zettel_suite_text';
 
 /**
  * This plugin is for quickly creating boilerplate notes for my Zettelkasten
@@ -279,7 +279,8 @@ export default class ZettelSuitePlugin extends Plugin {
 			authors: orEmptyStr(authors),
 			pubdate: orEmptyStr(nd.pubdate),
 			bibtex: orEmptyStr(nd.bibtex),
-			annotation_target: orEmptyStr(nd.annotation_target)
+			annotation_target: orEmptyStr(nd.annotation_target),
+			citation_fields: citationFrontmatter(nd.citation)
 		}, ["title"]);
 	}
 

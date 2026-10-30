@@ -8,7 +8,7 @@ literature-type: {{lit_type}}
 annotations: {{annotations_file}}
 title: {{title}}
 authors: {{authors}}
-published: {{pubdate}}
+published: {{pubdate}}{{citation_fields}}
 reading-status:
 rating (0-10):
 ---

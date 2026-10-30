@@ -70,3 +70,52 @@ export function fillTemplate(
 		}
 	);
 }
+
+/**
+ * @param creator An author as the BibTeX parser gives it: split up, or just a
+ * name for organisations
+ * @returns The author the way the side panel writes it ("Lastname, Firstnames")
+ */
+export function authorFromBibtex(creator: {name?: string, lastName?: string, firstName?: string}): string {
+	if (creator.name)
+		return creator.name;
+	return [creator.lastName, creator.firstName].filter(part => part).join(", ");
+}
+
+/**
+ * Picks out what a citation needs from a BibTeX entry, under the property names
+ * a literature note uses.
+ * @returns Property name to value, only for what the entry has
+ */
+export function citationFromBibtex(entry: {key?: string, type?: string, fields: {[field: string]: any}}): {[property: string]: string} {
+	const { fields } = entry;
+	const text = (value: any) => [value].flat().filter(part => part).join(" and ");
+	// @conference is an old name for @inproceedings
+	const bibtype = entry.type === "conference" ? "inproceedings" : entry.type;
+
+	const citation: {[property: string]: string} = {
+		citekey: text(entry.key),
+		bibtype: text(bibtype),
+		venue: text(fields.journal ?? fields.journaltitle ?? fields.booktitle ?? fields.howpublished),
+		volume: text(fields.volume),
+		number: text(fields.number),
+		pages: text(fields.pages),
+		publisher: text(fields.publisher),
+		edition: text(fields.edition),
+		doi: text(fields.doi),
+		url: text(fields.url)
+	};
+	for (const property in citation)
+		if (!citation[property])
+			delete citation[property];
+	return citation;
+}
+
+/**
+ * @returns Frontmatter lines for a citation, each starting on a new line
+ */
+export function citationFrontmatter(citation: {[property: string]: string} | undefined): string {
+	return Object.entries(citation ?? {})
+		.map(([property, value]) => `\n${property}: ${yamlValue(value)}`)
+		.join("");
+}
