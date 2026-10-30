@@ -13,7 +13,7 @@ export default class FitnessPlugin extends Plugin {
 	async onload() {
 		
 		// Settings:
-		this.loadSettings();
+		await this.loadSettings();
 		this.addSettingTab(new FitnessAppSettingsTab(this.app, this));
 		
 		/**
@@ -68,7 +68,7 @@ export default class FitnessPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		this.saveData(this.settings)
+		await this.saveData(this.settings);
 	}
 }
 

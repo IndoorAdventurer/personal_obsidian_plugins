@@ -286,7 +286,9 @@ export default class ActiveWorkoutView extends MarkdownRenderChild {
 
                 // We save when all sets are done:
                 if (ex.todo.length === 0) {
-                    this.updateAndSaveExercise(ex);
+                    // In this order: saving the workout redraws everything,
+                    // which reloads the exercise note we're writing to.
+                    await this.updateAndSaveExercise(ex);
                     this.workout.saveFn?.(this.workout.toYaml());
                 }
             });
@@ -347,9 +349,12 @@ export default class ActiveWorkoutView extends MarkdownRenderChild {
         if (ex.comment)
             ex.exercise.latestComment = ex.comment;
 
-        await ex.exercise.saveExercise();
-
-        new Notice(`Updated the "${ex.exercise.fileName}" note.`);
+        try {
+            await ex.exercise.saveExercise();
+            new Notice(`Updated the "${ex.exercise.fileName}" note.`);
+        } catch (error) {
+            new Notice(`Could not update the "${ex.exercise.fileName}" note: ${error.message}`);
+        }
     }
 
     /**

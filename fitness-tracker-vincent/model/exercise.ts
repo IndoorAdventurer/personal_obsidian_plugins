@@ -33,22 +33,49 @@ export default class Exercise {
      * Load all relevant data from an exercise note.
      */
     public async loadFromFile(fileName: string) {
-        const file = this.getAllExerciseFiles().find(file => 
-            file.basename.toLowerCase() === fileName.toLowerCase()
-        );
-
-        if (!file) // || !(file instanceof(TFile)))
-            return;
-        const cache = this.app.metadataCache.getFileCache(file);
-        const frontmatter = cache?.frontmatter;
-        
+        // First of all, because the workout gets saved with this name. Whatever
+        // goes wrong below, it should never get lost.
         this.fileName = fileName;
+
+        const file = this.findExerciseFile(fileName);
+        const cache = file && await this.waitForExerciseCache(file);
+        if (!file || !cache) {
+            new Notice(`Could not load exercise "${fileName}". Make sure its note exists and is an exercise note.`);
+            return;
+        }
+        const frontmatter = cache.frontmatter;
+        
         this.filePath = file.path;
         // currentVolume should be set, but I handle this in workout.ts:
-        this.currentVolume = frontmatter?.["current-volume"].map(parseFitnessSet) || [];
+        this.currentVolume = frontmatter?.["current-volume"]?.map(parseFitnessSet) || [];
         this.recordVolume = frontmatter?.["record-volume"]?.map(parseFitnessSet) || [];
         await this.parsePersonalNotes(file, cache);
         this.latestComment = frontmatter?.["latest-comment"] || "";
+    }
+
+    /**
+     * Finds an exercise note by name. Also works for a note that is missing from
+     * the metadata cache right now, as happens just after it got saved.
+     */
+    private findExerciseFile(fileName: string): TFile | null {
+        return this.getAllExerciseFiles().find(file =>
+            file.basename.toLowerCase() === fileName.toLowerCase()
+        ) ?? this.app.metadataCache.getFirstLinkpathDest(fileName, "");
+    }
+
+    /**
+     * Obsidian briefly has no metadata for a note after it got changed, and the
+     * workout gets redrawn right around that time. This gives it a moment.
+     * @returns The metadata, or null if this is not (or no longer) an exercise.
+     */
+    private async waitForExerciseCache(file: TFile): Promise<CachedMetadata | null> {
+        for (let attempt = 0; attempt < 30; attempt++) {
+            const cache = this.app.metadataCache.getFileCache(file);
+            if (cache?.frontmatter?.["fitness-note-type"] === "exercise-note")
+                return cache;
+            await new Promise(resolve => window.setTimeout(resolve, 100));
+        }
+        return null;
     }
 
     /**
