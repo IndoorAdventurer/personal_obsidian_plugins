@@ -10,7 +10,8 @@ export default class ZettelSuiteView extends ItemView {
     public static readonly VIEW_TYPE_ZETTELSUITEVIEW = "zettelview";
     private onSimpleNote: (nd: NoteDef) => void;
     private onLitNote: (nd: NoteDef) => void;
-    
+    private bibtex_input: HTMLTextAreaElement | null = null;
+
     /**
      * 
      * @param leaf See ItemView's constructor
@@ -94,6 +95,7 @@ export default class ZettelSuiteView extends ItemView {
     year={1996}
 }`);
                 bib_item = text;
+                this.bibtex_input = text.inputEl;
                 text.onChange(value => {
                     // Autofilling from bibtex if applicable
                     const partial_def = this.parse_bibtex(value);
@@ -173,6 +175,13 @@ export default class ZettelSuiteView extends ItemView {
 
     async onClose() {
         // Nothing to clean up.
+    }
+
+    /**
+     * Puts the cursor in the BibTex field, the first step of a literature note.
+     */
+    public focusBibtex() {
+        this.bibtex_input?.focus();
     }
 
     /**

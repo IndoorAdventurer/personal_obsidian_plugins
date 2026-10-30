@@ -2,6 +2,7 @@ import { Editor, EditorPosition, MarkdownView, Menu, MenuItem, Plugin, TFile, Wo
 import ZettelSuiteView, {NoteDef} from 'zettel_suite_view';
 import { ZettelSuiteSettings, ZETTELSUITE_DEFAULT_SETTINGS } from 'zettel_suite_settings';
 import ZettelSuiteSettingsTab from 'zettel_suite_settings_tab';
+import NoteNameModal from 'zettel_suite_name_modal';
 // import * as path from 'path';
 
 /**
@@ -54,6 +55,33 @@ export default class ZettelSuitePlugin extends Plugin {
 			name: "Open Zettelsuite Panel",
 			callback: () => this.activateView()
 		})
+
+		// Adding a command for every type of note, so they can get a hotkey:
+		for (const [type, name] of [
+			["fleeting", "Fleeting Note"],
+			["permanent", "Permanent Note"],
+			["moc", "MOC"]
+		]) {
+			this.addCommand({
+				id: `new-${type}`,
+				name: `New ${name}`,
+				callback: () => new NoteNameModal(this.app, name, file_name =>
+					this.createSimpleNote({
+						note_type: type as any, file_name
+					})
+				).open()
+			});
+		}
+
+		// A literature note needs the whole form, which is in the panel:
+		this.addCommand({
+			id: "new-literature",
+			name: "New Literature Note",
+			callback: async () => {
+				const view = await this.activateView();
+				view?.focusBibtex();
+			}
+		});
 
 		// Adding creation options to the context menu for non-existing notes:
 		this.registerEvent(
@@ -125,8 +153,11 @@ export default class ZettelSuitePlugin extends Plugin {
 			})
 		}
 
-		if (leaf)
-			workspace.revealLeaf(leaf);
+		if (!leaf)
+			return null;
+
+		await workspace.revealLeaf(leaf);
+		return leaf.view instanceof ZettelSuiteView ? leaf.view : null;
 	}
 
 	/**
