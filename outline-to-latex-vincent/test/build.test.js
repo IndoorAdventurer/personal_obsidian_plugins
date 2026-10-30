@@ -191,6 +191,15 @@ test('annotation files and other notes in the literature folder are not papers',
 	assert.doesNotMatch(read('generated/references.bib'), /unknown/);
 });
 
+test('an empty property on a literature note stays out of the bibliography', async () => {
+	const { read } = await run({
+		'outline.md': outline('- [[A]]'),
+		'A.md': '# A\n[[Paper|x]]',
+		'lit/Paper.md': litNote('One', 'Anna Lorem', 2020, 'venue: V\nbibtype: article\nvolume:\ndoi:\n'),
+	});
+	assert.doesNotMatch(read('generated/references.bib'), /null/);
+});
+
 test('two notes with the same citation key are an error once cited', async () => {
 	const { result } = await run({
 		'outline.md': outline('- [[A]]'),

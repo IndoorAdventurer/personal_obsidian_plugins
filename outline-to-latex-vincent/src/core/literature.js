@@ -115,10 +115,10 @@ class Literature {
 		if (entry.year !== undefined) add('year', entry.year);
 		if (entry.venue) add(VENUE_FIELD[entry.type] || 'howpublished', escapeBib(entry.venue));
 		for (const name of EXTRA_FIELDS) {
-			if (entry.data[name] !== undefined) add(name, escapeBib(entry.data[name]));
+			if (entry.data[name] != null) add(name, escapeBib(entry.data[name]));
 		}
 		for (const name of VERBATIM_FIELDS) {
-			if (entry.data[name] !== undefined) add(name, entry.data[name]);
+			if (entry.data[name] != null) add(name, entry.data[name]);
 		}
 		return `@${entry.type}{${entry.key},\n${lines.join(',\n')}\n}\n`;
 	}
