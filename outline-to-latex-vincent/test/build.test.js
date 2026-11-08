@@ -210,6 +210,66 @@ test('two notes with the same citation key are an error once cited', async () =>
 	assert.match(messages(result, 'error').join(), /lorem2020/);
 });
 
+const bibBlock = (entry, lang = 'BibTex') => `## Resources\n### BibTex\n\`\`\`${lang}\n${entry}\n\`\`\`\n`;
+const prashant = '@InProceedings{prashant2025guaranteeing,\n  title={Guaranteeing {OOD} Detection},\n  author={Prashant, Mohit and Das, Suman},\n  booktitle={Proceedings of the AAAI Conference},\n  pages={12452--12460},\n  year={2025}\n}';
+
+test('a bibtex block in a literature note is the entry, verbatim and with its key', async () => {
+	const { result, read } = await run({
+		'outline.md': outline('- [[A]]'),
+		'A.md': '# A\n[[Paper|x]] and [[Bare|y]]',
+		'lit/Paper.md': litNote('Other title', 'Mohit Prashant', 2025, 'citekey: ignored\n') + bibBlock(prashant),
+		'lit/Bare.md': `# Bare\n${bibBlock('@book{bare1999, title={Bare}, year={1999}}', 'bibtex')}`,
+	});
+	assert.deepStrictEqual(messages(result, 'error'), []);
+	assert.deepStrictEqual(messages(result, 'warning'), []);
+	assert.match(read('generated/notes/a.tex'), /\\cite\{prashant2025guaranteeing\} and \\cite\{bare1999\}/);
+	const bib = read('generated/references.bib');
+	assert.ok(bib.includes(`${prashant}\n`));
+	assert.ok(bib.includes('@book{bare1999, title={Bare}, year={1999}}'));
+	assert.doesNotMatch(bib, /ignored|@misc/);
+});
+
+test('a literature note without a bibtex block falls back to its properties with a warning', async () => {
+	const { result, read } = await run({
+		'outline.md': outline('- [[A]]'),
+		'A.md': '# A\n[[Paper|x]] [[Mislabeled|y]]',
+		'lit/Paper.md': litNote('One', 'Anna Lorem', 2020),
+		'lit/Mislabeled.md': litNote('Two', 'Bob Dolor', 2021) + bibBlock('@article{dolor2021two,\n  title={Two}\n}', 'bib'),
+	});
+	assert.deepStrictEqual(messages(result, 'error'), []);
+	const warnings = messages(result, 'warning');
+	assert.strictEqual(warnings.filter((w) => /no bibtex block/.test(w)).length, 2);
+	assert.match(warnings.join(), /marked "bib" looks like BibTeX/);
+	assert.match(read('generated/references.bib'), /@article\{dolor2021,[\s\S]*@article\{lorem2020,/);
+});
+
+test('several or malformed bibtex blocks are an error once cited', async () => {
+	const { result } = await run({
+		'outline.md': outline('- [[A]]'),
+		'A.md': '# A\n[[Two blocks|x]] [[Broken|y]] [[Two entries|z]]',
+		'lit/Two blocks.md': litNote('One', 'Anna Lorem', 2020) + bibBlock(prashant) + bibBlock(prashant),
+		'lit/Broken.md': litNote('Two', 'Bob Dolor', 2021) + bibBlock('title={Two}'),
+		'lit/Two entries.md': litNote('Three', 'Carl Amet', 2022) + bibBlock(`${prashant}\n@misc{x2000, title={X}}`),
+		'lit/Uncited.md': litNote('Four', 'Dan Elit', 2023) + bibBlock('nonsense'),
+	});
+	const errors = messages(result, 'error');
+	assert.strictEqual(errors.length, 3);
+	assert.match(errors.join(), /2 bibtex blocks/);
+	assert.match(errors.join(), /isn't one @type\{key, \.\.\.\} entry/);
+	assert.match(errors.join(), /several entries/);
+	assert.strictEqual(result.ok, false);
+});
+
+test('two bibtex blocks with the same key are an error once cited', async () => {
+	const { result } = await run({
+		'outline.md': outline('- [[A]]'),
+		'A.md': '# A\n[[Paper A|x]]',
+		'lit/Paper A.md': litNote('One', 'Anna Lorem', 2020) + bibBlock(prashant),
+		'lit/Paper B.md': litNote('Two', 'Bob Dolor', 2021) + bibBlock(prashant),
+	});
+	assert.match(messages(result, 'error').join(), /prashant2025guaranteeing/);
+});
+
 test('unwritten sections get a placeholder and fail a final build', async () => {
 	const files = {
 		'outline.md': outline('- [[A]]\n- [[Checklist only]]\n- [[Not created|Nice title]]'),

@@ -53,7 +53,12 @@ A link to a literature note is a citation. The link's fragment chooses the comma
 - `latex-heading: false`: leave the title out (for an abstract).
 - `latex-numbered: false`: no number on the heading (for acknowledgements).
 
-Literature notes: `title`, `authors`, `published`, `venue`, `bibtype` (`article`, `inproceedings`, ...), and optionally `citekey`, `volume`, `number`, `pages`, `publisher`, `edition`, `doi`, `url`. Other property names can be mapped with `latex-literature-fields` in the outline.
+## Literature notes
+A note in a `latex-literature` folder is a paper if it has a ` ```bibtex ` code block, or a `title` or `authors` property. Only cited notes end up in `generated/references.bib`.
+
+The ` ```bibtex ` block (any case, anywhere in the note) is copied verbatim, and its key is the citation key. It must hold exactly one `@type{key, ...}` entry. Several blocks, several entries or a malformed block are an error once the note is cited.
+
+A cited note without a block gets a warning, and its entry is built from its properties: `title`, `authors`, `published`, `venue`, `bibtype` (`article`, `inproceedings`, ...), and optionally `citekey`, `volume`, `number`, `pages`, `publisher`, `edition`, `doi`, `url`. Other property names can be mapped with `latex-literature-fields` in the outline. The `annotations` property is read either way.
 
 ## Command line
 The pipeline doesn't depend on Obsidian:
